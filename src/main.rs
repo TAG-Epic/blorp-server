@@ -3,13 +3,15 @@ use std::sync::Mutex;
 use std::env;
 
 mod board;
+mod user;
 mod info_endpoints;
+mod account_endpoints;
 //#[macro_use] mod macros;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let redis_client = redis::Client::open(env::var("REDIS_URI").unwrap()).unwrap();
-    let redis_connection = redis_client.get_connection().unwrap();
+    let redis_connection = redis_client.get_async_connection().await.unwrap();
 
     let secret_key = env::var("SECRET").unwrap();
 
@@ -26,6 +28,8 @@ async fn main() -> Result<(), std::io::Error> {
         App::new()
             .app_data(state.clone())
             .service(info_endpoints::get_board)
+            .service(info_endpoints::get_current_user_id)
+            .service(account_endpoints::create_account)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
@@ -33,7 +37,7 @@ async fn main() -> Result<(), std::io::Error> {
 }
 
 struct AppState {
-    redis: Mutex<redis::Connection>,
+    redis: Mutex<redis::aio::Connection>,
     board: Mutex<Vec<Vec<board::Tile>>>,
     secret_key: String,
 }
@@ -53,7 +57,7 @@ macro_rules! require_authentication {
                 if unsigned.is_err() {
                     return actix_web::HttpResponse::Unauthorized().body("Invalid auth");
                 }
-                unsigned.unwrap().clone()
+                unsigned.unwrap().to_string()
             } else {
                 return actix_web::HttpResponse::Unauthorized().body("No authentication provided");
             }

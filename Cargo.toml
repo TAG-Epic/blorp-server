@@ -10,7 +10,7 @@ license = "mit"
 actix-web = "4.2.1"
 itsdangerous = "0.4.1"
 rand = "0.8.5"
-redis = { version = "0.22.1", features = ["tokio"] }
+redis = { version = "0.22.1", features = ["tokio-comp"] }
 serde = "1.0.147"
 serde_derive = "1.0.147"
 serde_json = "1.0.87"
