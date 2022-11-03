@@ -10,9 +10,9 @@ mod user;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let redis_client = redis::Client::open(
-        env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string()),
+        env::var("REDIS_URI").unwrap_or_else(|_| "redis://localhost:6379".to_string()),
     )
-    .expect("Could not find \"REDIS_URL\" environment variable");
+    .expect("Could not find \"REDIS_URI\" environment variable");
     let redis_connection = redis_client.get_async_connection().await.unwrap();
 
     let secret_key = env::var("SECRET").expect("Could not find \"SECRET\" environment variable");
