@@ -1,15 +1,15 @@
 use rand::Rng;
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Tile {
-    tile_type: TileType
+    tile_type: TileType,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum TileType {
     EMPTY,
-    RESOURCEFUL(u32)
+    RESOURCEFUL(u32),
 }
 
 pub fn create_board() -> Vec<Vec<Tile>> {
@@ -23,13 +23,15 @@ pub fn create_board() -> Vec<Vec<Tile>> {
                     let resources = rand::thread_rng().gen_range(1..=5);
 
                     Tile {
-                        tile_type: TileType::RESOURCEFUL(resources)
+                        tile_type: TileType::RESOURCEFUL(resources),
                     }
+                }
+                false => Tile {
+                    tile_type: TileType::EMPTY,
                 },
-                false => Tile { tile_type: TileType::EMPTY}
             });
-        };
+        }
         board.push(row);
-    };
+    }
     board
 }

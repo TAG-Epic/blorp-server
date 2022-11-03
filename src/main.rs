@@ -1,11 +1,11 @@
-use actix_web::{App, HttpServer, web};
-use std::sync::Mutex;
+use actix_web::{web, App, HttpServer};
 use std::env;
+use std::sync::Mutex;
 
-mod board;
-mod user;
-mod info_endpoints;
 mod account_endpoints;
+mod board;
+mod info_endpoints;
+mod user;
 //#[macro_use] mod macros;
 
 #[tokio::main]
@@ -17,10 +17,10 @@ async fn main() -> Result<(), std::io::Error> {
 
     println!("Connected to redis!");
 
-    let app_state = AppState{
+    let app_state = AppState {
         redis: Mutex::new(redis_connection),
         board: Mutex::new(board::create_board()),
-        secret_key
+        secret_key,
     };
     let state = web::Data::new(app_state);
 
@@ -46,21 +46,19 @@ struct AppState {
 //
 #[macro_export]
 macro_rules! require_authentication {
-    ($request:expr, $state:expr) => {
-        {
-            if let Some(authentication) = $request.headers().get("authentication") {
-                use itsdangerous::{Signer, default_builder};
-                let signer = default_builder($state.secret_key.clone()).build();
+    ($request:expr, $state:expr) => {{
+        if let Some(authentication) = $request.headers().get("authentication") {
+            use itsdangerous::{default_builder, Signer};
+            let signer = default_builder($state.secret_key.clone()).build();
 
-                let unsigned = signer.unsign(&authentication.to_str().unwrap());
-                
-                if unsigned.is_err() {
-                    return actix_web::HttpResponse::Unauthorized().body("Invalid auth");
-                }
-                unsigned.unwrap().to_string()
-            } else {
-                return actix_web::HttpResponse::Unauthorized().body("No authentication provided");
+            let unsigned = signer.unsign(&authentication.to_str().unwrap());
+
+            if unsigned.is_err() {
+                return actix_web::HttpResponse::Unauthorized().body("Invalid auth");
             }
+            unsigned.unwrap().to_string()
+        } else {
+            return actix_web::HttpResponse::Unauthorized().body("No authentication provided");
         }
-    }
+    }};
 }
