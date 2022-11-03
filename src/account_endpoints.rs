@@ -25,8 +25,8 @@ async fn create_account(
 
     let encoded_user = serde_json::to_string(&user).unwrap();
 
-    let redis_client = state.redis.lock().unwrap();
-    redis_client.set(format!("users.{id}"), encoded_user);
+    let mut redis_client = state.redis.lock().unwrap();
+    redis_client.set::<String, String, ()>(format!("users.{id}"), encoded_user);
 
     HttpResponse::Ok()
 }
