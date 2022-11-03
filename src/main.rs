@@ -6,14 +6,16 @@ mod account_endpoints;
 mod board;
 mod info_endpoints;
 mod user;
-//#[macro_use] mod macros;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let redis_client = redis::Client::open(env::var("REDIS_URI").unwrap()).unwrap();
+    let redis_client = redis::Client::open(
+        env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379/1".to_string()),
+    )
+    .expect("Could not find \"REDIS_URL\" environment variable");
     let redis_connection = redis_client.get_async_connection().await.unwrap();
 
-    let secret_key = env::var("SECRET").unwrap();
+    let secret_key = env::var("SECRET").expect("Could not find \"SECRET\" environment variable");
 
     println!("Connected to redis!");
 
@@ -40,25 +42,4 @@ struct AppState {
     redis: Mutex<redis::aio::Connection>,
     board: Mutex<Vec<Vec<board::Tile>>>,
     secret_key: String,
-}
-
-// TODO: Move to macros.rs
-//
-#[macro_export]
-macro_rules! require_authentication {
-    ($request:expr, $state:expr) => {{
-        if let Some(authentication) = $request.headers().get("authentication") {
-            use itsdangerous::{default_builder, Signer};
-            let signer = default_builder($state.secret_key.clone()).build();
-
-            let unsigned = signer.unsign(&authentication.to_str().unwrap());
-
-            if unsigned.is_err() {
-                return actix_web::HttpResponse::Unauthorized().body("Invalid auth");
-            }
-            unsigned.unwrap().to_string()
-        } else {
-            return actix_web::HttpResponse::Unauthorized().body("No authentication provided");
-        }
-    }};
 }
