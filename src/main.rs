@@ -6,13 +6,13 @@ mod account_endpoints;
 mod board;
 mod info_endpoints;
 mod user;
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let redis_client = redis::Client::open(
         env::var("REDIS_URI").unwrap_or_else(|_| "redis://localhost:6379".to_string()),
-    )
-    .expect("Could not find \"REDIS_URI\" environment variable");
+    ).unwrap();
     let redis_connection = redis_client.get_async_connection().await.unwrap();
 
     let secret_key = env::var("SECRET").expect("Could not find \"SECRET\" environment variable");
@@ -30,7 +30,7 @@ async fn main() -> Result<(), std::io::Error> {
         App::new()
             .app_data(state.clone())
             .service(info_endpoints::get_board)
-            .service(info_endpoints::get_current_user_id)
+            .service(info_endpoints::get_current_user)
             .service(account_endpoints::create_account)
     })
     .bind(("127.0.0.1", 8080))?
@@ -38,7 +38,7 @@ async fn main() -> Result<(), std::io::Error> {
     .await
 }
 
-struct AppState {
+pub struct AppState {
     redis: Mutex<redis::aio::Connection>,
     board: Mutex<Vec<Vec<board::Tile>>>,
     secret_key: String,

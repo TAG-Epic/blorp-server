@@ -6,4 +6,6 @@ pub struct User {
     pub username: String,
     pub action_points: u32,
     pub position: (u8, u8),
+    pub creation_date: u32,
+    pub awarded_points: u32,
 }

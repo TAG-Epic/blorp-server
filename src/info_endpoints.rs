@@ -1,7 +1,7 @@
-use crate::board;
-use crate::AppState;
-use actix_web::{get, web, HttpRequest, HttpResponse, Responder, Result};
+use crate::{board, AppState, user, utils};
+use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 use serde_json::json;
+use redis::AsyncCommands;
 
 #[get("/board")]
 async fn get_board(state: web::Data<AppState>) -> impl Responder {
@@ -10,31 +10,19 @@ async fn get_board(state: web::Data<AppState>) -> impl Responder {
     HttpResponse::Ok().json(board)
 }
 
-#[get("/@me/id")]
-async fn get_current_user_id(request: HttpRequest, state: web::Data<AppState>) -> impl Responder {
-    let user_id = match require_authentication(request, state) {
+#[get("/@me")]
+async fn get_current_user(request: HttpRequest, state: web::Data<AppState>) -> impl Responder {
+    let user_id = match utils::require_authentication(&request, &state) {
         Ok(id) => id,
         Err(resp) => return resp,
     };
+    utils::process_award_points(&user_id, &state).await;
 
-    HttpResponse::Ok().json(json!({ "id": user_id }))
+    let mut redis_client = state.redis.lock().unwrap();
+    let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
+
+    let user: user::User = serde_json::from_str(&encoded_user).unwrap();
+
+    HttpResponse::Ok().json(json!(user))
 }
 
-fn require_authentication(
-    request: HttpRequest,
-    state: web::Data<AppState>,
-) -> Result<String, HttpResponse> {
-    if let Some(authentication) = request.headers().get("authentication") {
-        use itsdangerous::{default_builder, Signer};
-        let signer = default_builder(state.secret_key.clone()).build();
-
-        let unsigned = signer.unsign(&authentication.to_str().unwrap());
-        if unsigned.is_err() {
-            Err(HttpResponse::Unauthorized().body("Invalid auth"))
-        } else {
-            Ok(unsigned.unwrap().to_string())
-        }
-    } else {
-        Err(HttpResponse::Unauthorized().body("No authentication provided"))
-    }
-}
