@@ -3,10 +3,11 @@ use serde_derive::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Tile {
-    tile_type: TileType,
+    pub tile_type: TileType,
+    pub position: (u8, u8),
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum TileType {
     EMPTY,
     RESOURCEFUL(u32),
@@ -14,9 +15,9 @@ pub enum TileType {
 
 pub fn create_board() -> Vec<Vec<Tile>> {
     let mut board: Vec<Vec<Tile>> = Vec::new();
-    for _row_id in 0..100 {
+    for row_id in 0..100 {
         let mut row: Vec<Tile> = Vec::new();
-        for _tile_id in 0..100 {
+        for tile_id in 0..100 {
             let is_resourceful = rand::thread_rng().gen_bool(1.0 / 25.0);
             row.push(match is_resourceful {
                 true => {
@@ -24,10 +25,12 @@ pub fn create_board() -> Vec<Vec<Tile>> {
 
                     Tile {
                         tile_type: TileType::RESOURCEFUL(resources),
+                        position: (tile_id, row_id)
                     }
                 }
                 false => Tile {
                     tile_type: TileType::EMPTY,
+                    position: (tile_id, row_id)
                 },
             });
         }

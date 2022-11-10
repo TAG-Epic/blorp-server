@@ -7,6 +7,7 @@ license = "mit"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-cors = "0.6.4"
 actix-web = "4.2.1"
 itsdangerous = "0.4.1"
 rand = "0.8.5"

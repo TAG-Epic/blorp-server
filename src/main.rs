@@ -1,12 +1,14 @@
 use actix_web::{web, App, HttpServer};
 use std::env;
 use std::sync::Mutex;
+use actix_cors::Cors;
 
 mod account_endpoints;
 mod board;
 mod info_endpoints;
 mod user;
 mod utils;
+mod board_endpoints;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -26,12 +28,23 @@ async fn main() -> Result<(), std::io::Error> {
     };
     let state = web::Data::new(app_state);
 
+
     HttpServer::new(move || {
+        let cors = Cors::permissive();
         App::new()
+            .wrap(cors)
             .app_data(state.clone())
             .service(info_endpoints::get_board)
             .service(info_endpoints::get_current_user)
+            .service(info_endpoints::get_all_users)
+            .service(info_endpoints::get_user)
             .service(account_endpoints::create_account)
+            .service(board_endpoints::dig_at)
+            .service(board_endpoints::move_player)
+            .service(board_endpoints::attack_player)
+            .service(board_endpoints::gift_player)
+            .service(account_endpoints::test_create_points)
+            .service(account_endpoints::upgrade_range)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

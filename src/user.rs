@@ -8,4 +8,6 @@ pub struct User {
     pub position: (u8, u8),
     pub creation_date: u32,
     pub awarded_points: u32,
+    pub range: u8,
+    pub health: u8,
 }

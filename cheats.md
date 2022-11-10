@@ -1,0 +1,6 @@
+- Wrapping around the board (only on left and top)
+- Teleport to 0,0 when specifying a unknown direction (maybe remove this?)
+- Dig while dead
+- Give points while dead
+- Give points while not in range
+- View outside range
