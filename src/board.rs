@@ -1,6 +1,5 @@
 use rand::Rng;
 use serde_derive::{Deserialize, Serialize};
-use rand::rngs::StdRng;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Tile {
@@ -15,7 +14,6 @@ pub enum TileType {
 }
 
 pub fn create_board() -> Vec<Vec<Tile>> {
-    let random = StdRng::from("blorp");
     let mut board: Vec<Vec<Tile>> = Vec::new();
     for row_id in 0..30 {
         let mut row: Vec<Tile> = Vec::new();

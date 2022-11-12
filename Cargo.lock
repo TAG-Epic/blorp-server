@@ -323,7 +323,6 @@ dependencies = [
  "async-mutex",
  "itsdangerous",
  "rand",
- "rand_seeder",
  "redis",
  "serde",
  "serde_derive",
@@ -929,15 +928,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
-]
-
-[[package]]
-name = "rand_seeder"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf2890aaef0aa82719a50e808de264f9484b74b442e1a3a0e5ee38243ac40bdb"
-dependencies = [
- "rand_core",
 ]
 
 [[package]]
