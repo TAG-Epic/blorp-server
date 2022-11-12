@@ -9,6 +9,7 @@ license = "mit"
 [dependencies]
 actix-cors = "0.6.4"
 actix-web = "4.2.1"
+async-mutex = "1.4.0"
 itsdangerous = "0.4.1"
 rand = "0.8.5"
 redis = { version = "0.22.1", features = ["tokio-comp"] }

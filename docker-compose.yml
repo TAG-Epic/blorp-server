@@ -1,0 +1,15 @@
+version: "3"
+services:
+  blorp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    links:
+      redis
+  redis:
+    image: redis
+

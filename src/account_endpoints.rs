@@ -17,9 +17,13 @@ async fn create_account(
     query: web::Query<AccountCreationQuery>,
     state: web::Data<AppState>,
 ) -> impl Responder {
+    println!("POST /user/@me");
     let id: u32 = thread_rng().gen();
-    let position = (0, 0);
     let created_at: u32 = SystemTime::now().duration_since(SystemTime::from(UNIX_EPOCH)).unwrap().as_secs().try_into().unwrap();
+
+    let x = rand::thread_rng().gen_range(1..30);
+    let y = rand::thread_rng().gen_range(1..30);
+    let position = (x, y);
 
     let user = user::User {
         id,
@@ -34,7 +38,7 @@ async fn create_account(
 
     let encoded_user = serde_json::to_string(&user).unwrap();
 
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
     redis_client.set::<String, String, ()>(format!("users.{id}"), encoded_user).await.expect("Could not create user");
 
     let signer = default_builder(state.secret_key.clone()).build();
@@ -49,11 +53,16 @@ async fn test_create_points(request: HttpRequest, state: web::Data<AppState>) ->
         Ok(id) => id,
         Err(resp) => return resp,
     };
+    println!("POST /user/@me/points");
+
+    if !cfg!(debug_assertions) {
+        return HttpResponse::BadRequest().json(json!({"error": "Not in development mode"}));
+    }
 
     utils::process_award_points(&user_id, &state).await;
 
 
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
 
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();
@@ -73,8 +82,9 @@ async fn upgrade_range(request: HttpRequest, state: web::Data<AppState>) -> impl
         Err(resp) => return resp,
     };
     utils::process_award_points(&user_id, &state).await;
+    println!("POST /user/@me/upgrade/range");
 
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
 
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();

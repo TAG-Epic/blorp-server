@@ -1,7 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use std::env;
-use std::sync::Mutex;
 use actix_cors::Cors;
+use async_mutex::Mutex;
 
 mod account_endpoints;
 mod board;

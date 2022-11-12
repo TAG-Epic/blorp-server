@@ -5,7 +5,7 @@ use redis::AsyncCommands;
 use serde_json::json;
 
 pub async fn process_award_points(user_id: &str, state: &web::Data<AppState>) {
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();
 

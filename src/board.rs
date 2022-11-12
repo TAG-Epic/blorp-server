@@ -1,23 +1,25 @@
 use rand::Rng;
 use serde_derive::{Deserialize, Serialize};
+use rand::rngs::StdRng;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Tile {
     pub tile_type: TileType,
     pub position: (u8, u8),
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub enum TileType {
     EMPTY,
     RESOURCEFUL(u32),
 }
 
 pub fn create_board() -> Vec<Vec<Tile>> {
+    let random = StdRng::from("blorp");
     let mut board: Vec<Vec<Tile>> = Vec::new();
-    for row_id in 0..100 {
+    for row_id in 0..30 {
         let mut row: Vec<Tile> = Vec::new();
-        for tile_id in 0..100 {
+        for tile_id in 0..30 {
             let is_resourceful = rand::thread_rng().gen_bool(1.0 / 25.0);
             row.push(match is_resourceful {
                 true => {

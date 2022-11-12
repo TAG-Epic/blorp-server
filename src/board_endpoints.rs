@@ -10,20 +10,28 @@ async fn dig_at(request: HttpRequest, state: web::Data<AppState>) -> impl Respon
         Err(resp) => return resp,
     };
     utils::process_award_points(&user_id, &state).await;
+    println!("POST /board/dig");
 
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
+    let mut board = state.board.lock().await;
+
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
 
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();
     let x: usize = user.position.0.into();
     let y: usize = user.position.1.into();
-    let current_tile = &state.board.lock().unwrap()[x][y];
+
+    let current_tile = &board[y][x];
+
     
     match current_tile.tile_type {
         board::TileType::RESOURCEFUL(resources) => {
             user.action_points += resources;
-            let mut board = state.board.lock().unwrap();
-            board[x][y].tile_type = board::TileType::EMPTY;
+            board[y][x].tile_type = board::TileType::EMPTY;
+
+            // Save
+            let encoded_user = serde_json::to_string(&user).unwrap();
+            redis_client.set::<String, String, ()>(format!("users.{user_id}"), encoded_user).await.expect("Could not write user");
 
             return HttpResponse::Ok().json(json!({}));
         },
@@ -40,9 +48,9 @@ async fn move_player(request: HttpRequest, path: web::Path<String>, state: web::
         Err(resp) => return resp,
     };
     utils::process_award_points(&user_id, &state).await;
+    println!("POST /board/move/{{direction}}");
 
-
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();
 
@@ -64,7 +72,7 @@ async fn move_player(request: HttpRequest, path: web::Path<String>, state: web::
         }
     };
 
-    let new_position = (new_position.0.min(100).max(0), new_position.1.min(100).max(0));
+    let new_position = (new_position.0.min(30).max(0), new_position.1.min(30).max(0));
 
     user.position = new_position;
     
@@ -87,9 +95,10 @@ async fn attack_player(request: HttpRequest, path: web::Path<String>, state: web
         Err(resp) => return resp,
     };
     utils::process_award_points(&user_id, &state).await;
+    println!("POST /user/{{user_id}}/attack");
 
 
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
 
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();
@@ -139,9 +148,10 @@ async fn gift_player(request: HttpRequest, path: web::Path<String>, state: web::
         Err(resp) => return resp,
     };
     utils::process_award_points(&user_id, &state).await;
+    println!("POST /board/{{user_id}}/gift");
 
 
-    let mut redis_client = state.redis.lock().unwrap();
+    let mut redis_client = state.redis.lock().await;
 
     let encoded_user = redis_client.get::<String, String>(format!("users.{user_id}")).await.unwrap();
     let mut user: user::User = serde_json::from_str(&encoded_user).unwrap();
